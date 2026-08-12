@@ -294,7 +294,7 @@ const processTrade = async (
 		}
 
 		await idb.cache.trade.put({
-			rid: 0,
+			rid: g.get("userTid"),
 			teams: rawTeams,
 		});
 

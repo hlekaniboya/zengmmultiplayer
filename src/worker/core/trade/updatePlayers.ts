@@ -1,5 +1,6 @@
 import { idb } from "../../db/index.ts";
 import type { TradeTeams } from "../../../common/types.ts";
+import { g } from "../../util/index.ts";
 import isUntradable from "./isUntradable.ts";
 
 /**
@@ -66,7 +67,7 @@ const updatePlayers = async (teams: TradeTeams): Promise<TradeTeams> => {
 	}
 
 	await idb.cache.trade.put({
-		rid: 0,
+		rid: g.get("userTid"),
 		teams,
 	});
 	return teams;

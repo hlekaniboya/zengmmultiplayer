@@ -1,4 +1,5 @@
 import { idb } from "../../db/index.ts";
+import get from "./get.ts";
 
 /**
  * Remove all players currently added to the trade.
@@ -9,7 +10,7 @@ import { idb } from "../../db/index.ts";
 const clear = async (
 	type: "all" | "other" | "user" | "keepUntradeable" = "all",
 ) => {
-	const tr = await idb.cache.trade.get(0);
+	const tr = await get();
 
 	if (tr) {
 		for (const [i, t] of tr.teams.entries()) {

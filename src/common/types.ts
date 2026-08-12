@@ -1854,7 +1854,7 @@ export type TradeTeam = {
 export type TradeTeams = [TradeTeam, TradeTeam];
 
 export type Trade = {
-	rid: 0;
+	rid: number;
 	teams: TradeTeams;
 };
 
