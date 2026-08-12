@@ -17,6 +17,7 @@ import { confirmDeleteAllLeagues } from "../util/confirmDeleteAllLeagues.tsx";
 import { requestPersistentStorage } from "../util/requestPersistentStorage.tsx";
 import { confirm } from "../util/confirm.tsx";
 import { safeLocalStorage } from "../util/safeLocalStorage.ts";
+import { getMultiplayerState } from "../util/multiplayer.ts";
 
 const initAds = (type: "accountChecked" | "uiRendered") => {
 	ads.setLoadingDone(type);
@@ -64,7 +65,13 @@ const setGameAttributes = (
 	gameAttributes: Partial<GameAttributesLeague>,
 	flagOverrides: LocalStateUI["flagOverrides"] | undefined,
 ) => {
-	localActions.updateGameAttributes(gameAttributes, flagOverrides);
+	let attrs = gameAttributes;
+	const mState = getMultiplayerState();
+	if (mState.isMultiplayer) {
+		const { userTid, userTids, ...rest } = gameAttributes;
+		attrs = rest;
+	}
+	localActions.updateGameAttributes(attrs, flagOverrides);
 };
 
 const showNotification2 = (options: ShowNotificationOptions) => {
@@ -99,7 +106,13 @@ const showModal = () => {
 };
 
 const updateLocal = (obj: Partial<LocalStateUI>) => {
-	localActions.update(obj);
+	let updateObj = obj;
+	const mState = getMultiplayerState();
+	if (mState.isMultiplayer) {
+		const { userTid, userTids, ...rest } = obj;
+		updateObj = rest;
+	}
+	localActions.update(updateObj);
 };
 
 const updateTeamOvrs = (ovrs: number[]) => {

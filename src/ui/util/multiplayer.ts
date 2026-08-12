@@ -33,6 +33,13 @@ let state: MultiplayerState = {
 // Listeners for UI state updates
 const stateListeners: ((state: MultiplayerState) => void)[] = [];
 
+let processingGuestTask = false;
+
+export const isProcessingGuestTask = () => processingGuestTask;
+export const setProcessingGuestTask = (val: boolean) => {
+  processingGuestTask = val;
+};
+
 export const getMultiplayerState = () => ({ ...state });
 
 export const subscribeMultiplayerState = (listener: (state: MultiplayerState) => void) => {
@@ -230,6 +237,8 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
     // When a guest requests a worker execution
     socket.on("guest-to-worker", async ({ guestId, callbackId, payload }) => {
       try {
+        setProcessingGuestTask(true);
+
         await promiseWorker.postMessage(["main", "updateGameAttributes", { 
           userTid: state.guestTid 
         }]);
@@ -240,12 +249,15 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
           userTid: state.hostTid 
         }]);
 
+        setProcessingGuestTask(false);
+
         socket?.emit("host-to-guest-response", {
           guestId,
           callbackId,
           payload: result,
         });
       } catch (err: any) {
+        setProcessingGuestTask(false);
         try {
           await promiseWorker.postMessage(["main", "updateGameAttributes", { 
             userTid: state.hostTid 
