@@ -124,7 +124,7 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
     socket.disconnect();
   }
 
-  const envUrl = (process.env as any).MULTIPLAYER_RELAY_URL;
+  const envUrl = process.env.MULTIPLAYER_RELAY_URL;
   const serverUrl = envUrl && envUrl.trim() !== ""
     ? envUrl
     : window.location.hostname === "localhost" 
