@@ -4,6 +4,7 @@ import { realtimeUpdate } from "../../util/realtimeUpdate.ts";
 import { MOBILE_AD_BOTTOM_MARGIN } from "../../../common/constants.ts";
 import { orderBy } from "../../../common/utils.ts";
 import { useLocal } from "../../util/local.ts";
+import { getMultiplayerState } from "../../util/multiplayer.ts";
 
 const setUserTid = async (userTid: number) => {
 	await toWorker("main", "updateGameAttributes", {
@@ -18,6 +19,11 @@ const handleChange = async (event: ChangeEvent<HTMLSelectElement>) => {
 };
 
 export const MultiTeamMenu = () => {
+	const mState = getMultiplayerState();
+	if (mState.isMultiplayer) {
+		return null;
+	}
+
 	const state = useLocal([
 		"stickyFooterAd",
 		"stickyFormButtons",
