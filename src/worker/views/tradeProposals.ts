@@ -125,6 +125,10 @@ export const fixPlayers = (
 			p.stats = p2.stats;
 			p.ratings = p2.ratings;
 			p.age = p2.age;
+		} else {
+			p.stats = { pts: 0, trb: 0, ast: 0, keyStats: "" };
+			p.ratings = { ovr: 0, pot: 0, pos: "" };
+			p.age = 0;
 		}
 	}
 };
