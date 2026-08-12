@@ -303,11 +303,11 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
 
         const result = await promiseWorker.postMessage(payload);
 
+        setProcessingGuestTask(false);
+
         await promiseWorker.postMessage(["main", "updateGameAttributes", { 
           userTid: state.hostTid 
         }]);
-
-        setProcessingGuestTask(false);
 
         socket?.emit("host-to-guest-response", {
           guestId,
