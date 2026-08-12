@@ -40,6 +40,29 @@ export const setProcessingGuestTask = (val: boolean) => {
   processingGuestTask = val;
 };
 
+export const syncUserTidsToWorker = async () => {
+  if (state.role === "host") {
+    try {
+      const userTids = [state.hostTid, state.guestTid];
+      await promiseWorker.postMessage(["main", "updateGameAttributes", { 
+        userTids 
+      }]);
+    } catch (err) {
+      console.error("Failed to sync userTids to worker:", err);
+    }
+  }
+};
+
+export const restoreUserTidsOnDisconnect = async () => {
+  try {
+    await promiseWorker.postMessage(["main", "updateGameAttributes", { 
+      userTids: [state.hostTid] 
+    }]);
+  } catch (err) {
+    console.error("Failed to restore userTids on disconnect:", err);
+  }
+};
+
 export const getMultiplayerState = () => ({ ...state });
 
 export const subscribeMultiplayerState = (listener: (state: MultiplayerState) => void) => {
@@ -66,6 +89,7 @@ export const updateHostTid = (tid: number) => {
   if (state.role === "host" && state.hostTid !== tid) {
     updateState({ hostTid: tid });
     socket?.emit("host-tid-change", { tid });
+    syncUserTidsToWorker();
   }
 };
 
@@ -232,6 +256,7 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
 
     socket.on("guest-tid-change", ({ tid }) => {
       updateState({ guestTid: tid });
+      syncUserTidsToWorker();
     });
 
     // When a guest requests a worker execution
@@ -278,6 +303,7 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
       if (state.lid !== null) {
         socket?.emit("host-lid-change", { lid: state.lid });
       }
+      syncUserTidsToWorker();
     });
   } else {
     // GUEST LISTENERS
@@ -336,6 +362,7 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
 };
 
 export const leaveMultiplayer = () => {
+  const oldRole = state.role;
   if (socket) {
     socket.disconnect();
     socket = null;
@@ -350,6 +377,10 @@ export const leaveMultiplayer = () => {
     guestReady: false,
     advanceOption: null,
   });
+
+  if (oldRole === "host") {
+    restoreUserTidsOnDisconnect();
+  }
 };
 
 // Send guest message to host via Socket.io
