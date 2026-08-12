@@ -155,6 +155,7 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
     socket.disconnect();
   }
 
+  // @ts-expect-error
   const envUrl = process.env.MULTIPLAYER_RELAY_URL;
   const serverUrl = envUrl && envUrl.trim() !== ""
     ? envUrl
@@ -419,6 +420,20 @@ export const toWorkerGuest = (payload: any): Promise<any> => {
 // Broadcast local Host Worker -> Host UI calls to all Guests
 export const broadcastHostUI = (name: string, params: any[]) => {
   if (socket && state.isMultiplayer && state.role === "host") {
+    // If we are NOT processing a Guest's task, then this UI push is specific to the Host's local actions.
+    // We should ONLY broadcast global/shared events, and SKIP broadcasting Host-team-specific UI state to the Guest.
+    if (!processingGuestTask) {
+      const globalEvents = [
+        "realtimeUpdate",
+        "showNotification",
+        "showModal",
+        "autoPlayDialog",
+      ];
+      if (!globalEvents.includes(name)) {
+        return;
+      }
+    }
+
     socket.emit("host-broadcast", {
       event: name,
       payload: params,
