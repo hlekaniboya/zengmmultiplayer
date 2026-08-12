@@ -121,9 +121,11 @@ export const fixPlayers = (
 
 	for (const p of t.trade) {
 		const p2 = playersWithStats.find((p2) => p2.pid === p.pid);
-		p.stats = p2.stats;
-		p.ratings = p2.ratings;
-		p.age = p2.age;
+		if (p2) {
+			p.stats = p2.stats;
+			p.ratings = p2.ratings;
+			p.age = p2.age;
+		}
 	}
 };
 
