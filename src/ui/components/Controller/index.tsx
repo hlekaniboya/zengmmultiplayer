@@ -68,6 +68,7 @@ export const Controller = () => {
 		hostReady: false,
 		guestReady: false,
 		advanceOption: null,
+		pendingTrade: null,
 	});
 
 	useEffect(() => {

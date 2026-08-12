@@ -5064,8 +5064,21 @@ const createTrade = async (teams: TradeTeams) => {
 	await toUI("realtimeUpdate", []);
 };
 
-const proposeTrade = async (forceTrade: boolean, conditions: Conditions) => {
-	const { accepted, message, undo } = await trade.propose(forceTrade);
+const proposeTrade = async (
+	options: boolean | { forceTrade?: boolean; isMultiplayerAccept?: boolean },
+	conditions: Conditions,
+) => {
+	let force = false;
+	let isMultiplayerAccept = false;
+
+	if (typeof options === "boolean") {
+		force = options;
+	} else if (options && typeof options === "object") {
+		force = !!options.forceTrade;
+		isMultiplayerAccept = !!options.isMultiplayerAccept;
+	}
+
+	const { accepted, message, undo } = await trade.propose(force, isMultiplayerAccept);
 	await toUI("realtimeUpdate", []);
 
 	let undoKey;

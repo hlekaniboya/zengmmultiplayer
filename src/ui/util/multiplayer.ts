@@ -2,6 +2,10 @@ import { io, Socket } from "socket.io-client";
 import { promiseWorker } from "./promiseWorker.ts";
 import api from "../api/index.ts";
 import { router } from "../router/index.ts";
+import type { TradeTeams } from "../../common/types.ts";
+import { showNotification } from "./showNotification.ts";
+import { toWorker } from "./toWorker.ts";
+import { realtimeUpdate } from "./realtimeUpdate.ts";
 
 export interface MultiplayerState {
   isMultiplayer: boolean;
@@ -14,6 +18,7 @@ export interface MultiplayerState {
   hostReady: boolean;
   guestReady: boolean;
   advanceOption: string | null;
+  pendingTrade: TradeTeams | null;
 }
 
 let socket: Socket | null = null;
@@ -28,6 +33,7 @@ let state: MultiplayerState = {
   hostReady: false,
   guestReady: false,
   advanceOption: null,
+  pendingTrade: null,
 };
 
 // Listeners for UI state updates
@@ -237,6 +243,32 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
     updateState({ hostReady: false, guestReady: false, advanceOption: null, statusMessage: "Simulation advanced successfully." });
   });
 
+  // Handle multiplayer trade proposals
+  socket.on("propose-multiplayer-trade", ({ teams }) => {
+    updateState({ pendingTrade: teams });
+    showNotification({
+      type: "info",
+      text: "Pending Trade Proposal received! Review it on your Trade screen.",
+    });
+  });
+
+  socket.on("decline-multiplayer-trade", () => {
+    updateState({ pendingTrade: null });
+    showNotification({
+      type: "error",
+      text: "The other GM declined your trade proposal.",
+    });
+  });
+
+  socket.on("accept-multiplayer-trade", () => {
+    updateState({ pendingTrade: null });
+    showNotification({
+      type: "success",
+      text: "The trade proposal was accepted and successfully executed!",
+    });
+    realtimeUpdate(["playerMovement"]);
+  });
+
   if (role === "host") {
     // HOST LISTENERS
     
@@ -438,5 +470,53 @@ export const broadcastHostUI = (name: string, params: any[]) => {
       event: name,
       payload: params,
     });
+  }
+};
+
+export const proposeMultiplayerTrade = (teams: TradeTeams) => {
+  if (socket && state.isMultiplayer) {
+    socket.emit("propose-multiplayer-trade", { teams });
+  }
+};
+
+export const declineMultiplayerTrade = () => {
+  const trade = state.pendingTrade;
+  if (trade) {
+    socket?.emit("decline-multiplayer-trade");
+    updateState({ pendingTrade: null });
+  }
+};
+
+export const acceptMultiplayerTrade = async () => {
+  const trade = state.pendingTrade;
+  if (trade) {
+    try {
+      const result = await toWorker("main", "proposeTrade", {
+        forceTrade: false,
+        isMultiplayerAccept: true,
+      });
+
+      const accepted = result?.accepted;
+      const message = result?.message;
+
+      if (accepted) {
+        socket?.emit("accept-multiplayer-trade");
+        updateState({ pendingTrade: null });
+        showNotification({
+          type: "success",
+          text: "Trade successfully executed!",
+        });
+      } else if (message) {
+        showNotification({
+          type: "error",
+          text: message,
+        });
+      }
+    } catch (err: any) {
+      showNotification({
+        type: "error",
+        text: `Failed to execute trade: ${err?.message || String(err)}`,
+      });
+    }
   }
 };

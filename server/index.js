@@ -111,6 +111,28 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Relay multiplayer trade proposals between players in the same room
+  socket.on("propose-multiplayer-trade", ({ teams }) => {
+    const roomId = socket.roomId;
+    if (roomId) {
+      socket.to(roomId).emit("propose-multiplayer-trade", { teams });
+    }
+  });
+
+  socket.on("decline-multiplayer-trade", () => {
+    const roomId = socket.roomId;
+    if (roomId) {
+      socket.to(roomId).emit("decline-multiplayer-trade");
+    }
+  });
+
+  socket.on("accept-multiplayer-trade", () => {
+    const roomId = socket.roomId;
+    if (roomId) {
+      socket.to(roomId).emit("accept-multiplayer-trade");
+    }
+  });
+
   // Relay guest message to Host
   socket.on("guest-to-worker", ({ callbackId, payload }) => {
     const roomId = socket.roomId;

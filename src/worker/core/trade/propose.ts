@@ -18,7 +18,7 @@ import { ValueChangeCalculator } from "../team/ValueChangeCalculator.ts";
  * @param {boolean} forceTrade When true (like in God Mode), this trade is accepted regardless of the AI
  * @return {Promise.<boolean, string>} Resolves to an array. The first argument is a boolean for whether the trade was accepted or not. The second argument is a string containing a message to be dispalyed to the user.
  */
-const propose = async (forceTrade: boolean = false) => {
+const propose = async (forceTrade: boolean = false, isMultiplayerAccept: boolean = false) => {
 	if (
 		g.get("phase") >= PHASE.AFTER_TRADE_DEADLINE &&
 		g.get("phase") <= PHASE.PLAYOFFS
@@ -41,7 +41,7 @@ const propose = async (forceTrade: boolean = false) => {
 	// return a redundant message here.
 	const s = await summary(teams);
 
-	if (s.warning && !forceTrade) {
+	if (s.warning && !forceTrade && !isMultiplayerAccept) {
 		return { accepted: false as const, message: null };
 	}
 
@@ -54,7 +54,7 @@ const propose = async (forceTrade: boolean = false) => {
 		tradingPartnerTid: g.get("userTid"),
 	});
 
-	if (dv > 0 || forceTrade) {
+	if (dv > 0 || forceTrade || isMultiplayerAccept) {
 		const hash = hashSavedTrade(teams);
 		const undo = await processTrade(teams, hash);
 

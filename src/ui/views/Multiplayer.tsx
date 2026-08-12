@@ -27,6 +27,7 @@ const Multiplayer = () => {
     hostReady: false,
     guestReady: false,
     advanceOption: null,
+    pendingTrade: null,
   });
 
   const [inputRoomId, setInputRoomId] = useState("");

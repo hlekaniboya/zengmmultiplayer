@@ -12,6 +12,13 @@ import type { TradeTeams, View } from "../../../common/types.ts";
 import clsx from "clsx";
 import { SaveTrade } from "../../components/SaveTrade.tsx";
 import { showUndoNotification } from "../../components/UndoNotification.tsx";
+import {
+	subscribeMultiplayerState,
+	type MultiplayerState,
+	proposeMultiplayerTrade,
+	declineMultiplayerTrade,
+	acceptMultiplayerTrade,
+} from "../../util/multiplayer.ts";
 
 export type HandleToggle = (
 	userOrOther: "other" | "user",
@@ -48,6 +55,27 @@ const TradeSideText = ({
 };
 
 const Trade = (props: View<"trade">) => {
+	const [mState, setMState] = useState<MultiplayerState>({
+		isMultiplayer: false,
+		role: null,
+		roomId: null,
+		statusMessage: "Not connected",
+		hostTid: 0,
+		guestTid: 1,
+		lid: null,
+		hostReady: false,
+		guestReady: false,
+		advanceOption: null,
+		pendingTrade: null,
+	});
+
+	useEffect(() => {
+		const unsubscribe = subscribeMultiplayerState((newState) => {
+			setMState(newState);
+		});
+		return () => unsubscribe();
+	}, []);
+
 	const [state, setState] = useState({
 		accepted: false,
 		asking: false,
@@ -275,6 +303,33 @@ const Trade = (props: View<"trade">) => {
 	} = props;
 
 	const handleClickPropose = async () => {
+		if (mState.isMultiplayer && (otherTid === mState.hostTid || otherTid === mState.guestTid)) {
+			const currentTeams: TradeTeams = [
+				{
+					tid: userTid,
+					pids: userPids,
+					pidsExcluded: props.userPidsExcluded,
+					dpids: userDpids,
+					dpidsExcluded: props.userDpidsExcluded,
+				},
+				{
+					tid: otherTid,
+					pids: otherPids,
+					pidsExcluded: props.otherPidsExcluded,
+					dpids: otherDpids,
+					dpidsExcluded: props.otherDpidsExcluded,
+				},
+			];
+			proposeMultiplayerTrade(currentTeams);
+			setState((prevState) => ({
+				...prevState,
+				accepted: false,
+				message: "Trade proposal sent to the other GM! Waiting for their response.",
+				prevTeams: undefined,
+			}));
+			return;
+		}
+
 		const { accepted, message, undoKey } = await toWorker(
 			"main",
 			"proposeTrade",
@@ -399,6 +454,42 @@ const Trade = (props: View<"trade">) => {
 
 	return (
 		<>
+			{mState.isMultiplayer && mState.pendingTrade && (
+				<div className="alert alert-info d-flex align-items-center justify-content-between mb-4">
+					<div>
+						<strong>Pending Trade Proposal!</strong> The other GM has proposed a trade. Click <strong>Review Proposal</strong> to load it in your trade window.
+					</div>
+					<div className="d-flex gap-2">
+						<button 
+							type="button" 
+							className="btn btn-primary btn-sm" 
+							onClick={async () => {
+								await toWorker("main", "createTrade", mState.pendingTrade!);
+							}}
+						>
+							Review Proposal
+						</button>
+						<button 
+							type="button" 
+							className="btn btn-success btn-sm" 
+							onClick={async () => {
+								await acceptMultiplayerTrade();
+							}}
+						>
+							Accept Proposal
+						</button>
+						<button 
+							type="button" 
+							className="btn btn-danger btn-sm" 
+							onClick={() => {
+								declineMultiplayerTrade();
+							}}
+						>
+							Decline Proposal
+						</button>
+					</div>
+				</div>
+			)}
 			<div className="row">
 				<div className="col-md-9">
 					<div className="d-flex mb-2 align-items-center">
