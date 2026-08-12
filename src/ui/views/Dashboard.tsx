@@ -190,8 +190,9 @@ const LeagueName = ({
 	);
 };
 
-const Ago = ({ date }: { date?: Date }) => {
-	if (date) {
+const Ago = ({ date: dateInput }: { date?: Date | string }) => {
+	if (dateInput) {
+		const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
 		return <span title={date.toLocaleString()}>{relativeTime(date)}</span>;
 	}
 
@@ -279,16 +280,16 @@ const Dashboard = ({ leagues }: View<"dashboard">) => {
 				{
 					searchValue: league.created ? relativeTime(league.created) : "",
 					sortValue:
-						league.created && league.created.getTime
-							? league.created.getTime()
+						league.created
+							? (typeof league.created === "string" ? new Date(league.created) : league.created).getTime()
 							: 0,
 					value: <Ago date={league.created} />,
 				},
 				{
 					searchValue: league.lastPlayed ? relativeTime(league.lastPlayed) : "",
 					sortValue:
-						league.lastPlayed && league.lastPlayed.getTime
-							? league.lastPlayed.getTime()
+						league.lastPlayed
+							? (typeof league.lastPlayed === "string" ? new Date(league.lastPlayed) : league.lastPlayed).getTime()
 							: 0,
 					value: <Ago date={league.lastPlayed} />,
 				},

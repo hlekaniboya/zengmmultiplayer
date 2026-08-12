@@ -27,6 +27,7 @@ import { unregisterServiceWorkers } from "./util/unregisterServiceWorkers.ts";
 import { safeLocalStorage } from "./util/safeLocalStorage.ts";
 import { showNotification } from "./util/showNotification.ts";
 import { toWorker } from "./util/toWorker.ts";
+import { broadcastHostUI } from "./util/multiplayer.ts";
 window.bbgm = { api, showNotification, toWorker };
 
 const handleVersion = async () => {
@@ -230,6 +231,9 @@ const setupRoutes = async () => {
 				)}`,
 			);
 		}
+
+		// Broadcast to multiplayer guests if this is the host
+		broadcastHostUI(name, params);
 
 		// https://github.com/microsoft/TypeScript/issues/21732
 		// @ts-expect-error

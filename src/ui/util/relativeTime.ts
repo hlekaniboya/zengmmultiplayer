@@ -6,13 +6,14 @@ const day = hour * 24;
 const month = day * 30;
 const year = day * 365;
 
-export const relativeTime = (date: Date) => {
+export const relativeTime = (dateInput: Date | string) => {
 	if (!relativeTimeFormatter) {
 		relativeTimeFormatter = new Intl.RelativeTimeFormat("en", {
 			numeric: "auto",
 		});
 	}
 
+	const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
 	const diff = date.getTime() - Date.now();
 	const diffAbs = Math.abs(diff);
 

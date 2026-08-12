@@ -1,5 +1,5 @@
 import { LazyMotion } from "framer-motion";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { localActions, useLocal } from "../../util/local.ts";
 import { CommandPalette } from "../CommandPalette/index.tsx";
 import { Footer } from "./Footer.tsx";
@@ -16,6 +16,11 @@ import { useViewData } from "../../util/viewManager.tsx";
 import { isSport } from "../../../common/sportFunctions.ts";
 import api from "../../api/index.ts";
 import { ErrorBoundary } from "../ErrorBoundary.tsx";
+import { 
+  subscribeMultiplayerState, 
+  setPlayerReadyToAdvance 
+} from "../../util/multiplayer.ts";
+import type { MultiplayerState } from "../../util/multiplayer.ts";
 
 const loadFramerMotionFeatures = () =>
 	import("../../util/framerMotionFeatures.ts").then((res) => res.default);
@@ -51,6 +56,26 @@ export const Controller = () => {
 	const state = useViewData();
 
 	const { popup, showNagModal } = useLocal(["popup", "showNagModal"]);
+
+	const [mState, setMState] = useState<MultiplayerState>({
+		isMultiplayer: false,
+		role: null,
+		roomId: null,
+		statusMessage: "",
+		hostTid: 0,
+		guestTid: 1,
+		lid: null,
+		hostReady: false,
+		guestReady: false,
+		advanceOption: null,
+	});
+
+	useEffect(() => {
+		const unsubscribe = subscribeMultiplayerState((newState) => {
+			setMState(newState);
+		});
+		return () => unsubscribe();
+	}, []);
 
 	const closeNagModal = useCallback(() => {
 		localActions.update({
@@ -126,6 +151,73 @@ export const Controller = () => {
 				</div>
 			</div>
 			<Notifications />
+			{mState.isMultiplayer && (mState.hostReady || mState.guestReady) && (
+				<div 
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						width: "100%",
+						height: "100%",
+						backgroundColor: "rgba(0,0,0,0.75)",
+						backdropFilter: "blur(5px)",
+						zIndex: 9999,
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+						color: "#fff"
+					}}
+				>
+					<div className="card text-dark text-center p-4 m-3" style={{ maxWidth: "450px", borderRadius: "10px" }}>
+						<div className="card-body">
+							<h3 className="card-title text-primary mb-3">Multiplayer Advance</h3>
+							<p className="lead fs-5 mb-4">
+								{mState.role === "host" ? (
+									mState.hostReady && !mState.guestReady ? (
+										<span>Waiting for Player 2 (Guest) to agree to advance...</span>
+									) : (
+										<span>Player 2 wants to advance!</span>
+									)
+								) : (
+									mState.guestReady && !mState.hostReady ? (
+										<span>Waiting for Player 1 (Host) to agree to advance...</span>
+									) : (
+										<span>Player 1 wants to advance!</span>
+									)
+								)}
+							</p>
+							<div className="bg-light p-3 border rounded mb-4 font-monospace fs-6">
+								<strong>Advance action:</strong> Play {mState.advanceOption || "1 Day"}
+							</div>
+							
+							<div className="d-flex justify-content-center gap-3">
+								{mState.role === "host" && !mState.hostReady && (
+									<button 
+										className="btn btn-success btn-lg"
+										onClick={() => setPlayerReadyToAdvance(true)}
+									>
+										Agree & Advance
+									</button>
+								)}
+								{mState.role === "guest" && !mState.guestReady && (
+									<button 
+										className="btn btn-success btn-lg"
+										onClick={() => setPlayerReadyToAdvance(true)}
+									>
+										Agree & Advance
+									</button>
+								)}
+								<button 
+									className="btn btn-secondary btn-lg"
+									onClick={() => setPlayerReadyToAdvance(false)}
+								>
+									Cancel / Decline
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 		</LazyMotion>
 	);
 };

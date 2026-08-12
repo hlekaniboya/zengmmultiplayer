@@ -81,6 +81,7 @@ export const rolldownConfig = (
 			define: {
 				"process.env.NODE_ENV": JSON.stringify(envOptions.nodeEnv),
 				"process.env.SPORT": JSON.stringify(sport),
+				"process.env.MULTIPLAYER_RELAY_URL": JSON.stringify(process.env.MULTIPLAYER_RELAY_URL ?? ""),
 			},
 			jsx: "react-jsx",
 		},

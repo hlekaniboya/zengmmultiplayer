@@ -9,6 +9,7 @@ import type { MenuItemLink, MenuItemHeader } from "../../common/types.ts";
 import { frivolities } from "../views/Frivolities.tsx";
 import { takeScreenshot } from "./takeScreenshot.ts";
 import { bySport, isSport } from "../../common/sportFunctions.ts";
+import { getMultiplayerState } from "./multiplayer.ts";
 
 const depthChart: MenuItemLink[] =
 	DEPTH_CHART_NAME !== undefined
@@ -66,7 +67,9 @@ export const menuItems: (MenuItemLink | MenuItemHeader)[] = [
 		active: (pageID) => pageID === "dashboard",
 		nonLeague: true,
 		commandPalette: true,
-		path: "/",
+		get path() {
+			return getMultiplayerState().isMultiplayer ? "/multiplayer" : "/";
+		},
 		text: "Leagues",
 	},
 	...(REAL_PLAYERS_INFO
@@ -132,9 +135,19 @@ export const menuItems: (MenuItemLink | MenuItemHeader)[] = [
 	},
 	{
 		type: "link",
+		active: (pageID) => pageID === "multiplayer",
+		nonLeague: true,
+		commandPalette: true,
+		path: "/multiplayer",
+		text: "Multiplayer Lobby",
+	},
+	{
+		type: "link",
 		active: (pageID) => pageID === "dashboard",
 		league: true,
-		path: "/",
+		get path() {
+			return getMultiplayerState().isMultiplayer ? ["multiplayer"] : "/";
+		},
 		text: "Switch League",
 	},
 	{
@@ -801,6 +814,14 @@ export const menuItems: (MenuItemLink | MenuItemHeader)[] = [
 				godMode: true,
 				path: ["multi_team_mode"],
 				text: "Multi Team Mode",
+			},
+			{
+				type: "link",
+				active: (pageID) => pageID === "multiplayer",
+				league: true,
+				commandPalette: true,
+				path: ["multiplayer"],
+				text: "Multiplayer Lobby",
 			},
 			{
 				type: "link",

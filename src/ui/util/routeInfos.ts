@@ -15,6 +15,7 @@ export const routeInfos = {
 	"/dropbox": "dropbox",
 	"/exhibition": "exhibition",
 	"/exhibition/game": "exhibitionGame",
+	"/multiplayer": "multiplayer",
 
 	// League views
 	"/l/:lid": "leagueDashboard",
@@ -137,6 +138,7 @@ export const routeInfos = {
 	"/l/:lid/player_feats/:abbrev": "playerFeats",
 	"/l/:lid/player_feats/:abbrev/:season": "playerFeats",
 	"/l/:lid/multi_team_mode": "multiTeamMode",
+	"/l/:lid/multiplayer": "multiplayer",
 	"/l/:lid/team_records": "teamRecords",
 	"/l/:lid/team_records/:byType": "teamRecords",
 	"/l/:lid/team_records/:byType/:filter": "teamRecords",

@@ -1,6 +1,7 @@
 import { promiseWorker } from "./promiseWorker.ts";
 import type { WorkerAPICategory } from "../../worker/index.ts";
 import type api from "../../worker/api/index.ts";
+import { getMultiplayerState, toWorkerGuest, setPlayerReadyToAdvance } from "./multiplayer.ts";
 
 type API = typeof api;
 
@@ -21,5 +22,21 @@ export const toWorker = <
 	name: Name,
 	param: ParametersUnconstrained<Func>[0],
 ): Promise<ReturnTypeUnconstrained<Func>> => {
+	const state = getMultiplayerState();
+	
+	// Only proxy Guest worker calls to the Host's worker if the Guest is actively on a league page
+	const isInLeaguePage = window.location.pathname.startsWith("/l/");
+
+	if (state.isMultiplayer && isInLeaguePage) {
+		if (type === "playMenu") {
+			// Intercept and route through turn-agreement coordination
+			setPlayerReadyToAdvance(true, name as string);
+			return Promise.resolve(undefined as any);
+		}
+
+		if (state.role === "guest") {
+			return toWorkerGuest([type, name, param]);
+		}
+	}
 	return promiseWorker.postMessage([type, name, param]);
 };

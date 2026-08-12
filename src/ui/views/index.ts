@@ -72,6 +72,7 @@ export { default as ManageTeams } from "./ManageTeams/index.tsx";
 export { default as Message } from "./Message/index.tsx";
 export { default as Most } from "./Most/index.tsx";
 export { default as MultiTeamMode } from "./MultiTeamMode.tsx";
+export { default as Multiplayer } from "./Multiplayer.tsx";
 export { default as NegotiationList } from "./NegotiationList.tsx";
 export { default as NewLeague } from "./NewLeague/index.tsx";
 export { default as NewTeam } from "./NewTeam.tsx";
