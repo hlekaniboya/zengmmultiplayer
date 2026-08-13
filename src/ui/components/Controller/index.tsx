@@ -174,7 +174,12 @@ export const Controller = () => {
 						<div className="card-body">
 							<h3 className="card-title text-primary mb-3">Multiplayer Advance</h3>
 							<p className="lead fs-5 mb-4">
-								{mState.role === "host" ? (
+								{mState.hostReady && mState.guestReady ? (
+									<span className="text-success d-flex align-items-center justify-content-center">
+										<span className="glyphicon glyphicon-refresh me-2" style={{ display: "inline-block" }} />
+										Both GMs agreed! Simulating advance...
+									</span>
+								) : mState.role === "host" ? (
 									mState.hostReady && !mState.guestReady ? (
 										<span>Waiting for Player 2 (Guest) to agree to advance...</span>
 									) : (
@@ -192,30 +197,36 @@ export const Controller = () => {
 								<strong>Advance action:</strong> Play {mState.advanceOption || "1 Day"}
 							</div>
 							
-							<div className="d-flex justify-content-center gap-3">
-								{mState.role === "host" && !mState.hostReady && (
+							{mState.hostReady && mState.guestReady ? (
+								<div className="text-center text-muted">
+									Please wait while the simulation completes...
+								</div>
+							) : (
+								<div className="d-flex justify-content-center gap-3">
+									{mState.role === "host" && !mState.hostReady && (
+										<button 
+											className="btn btn-success btn-lg"
+											onClick={() => setPlayerReadyToAdvance(true)}
+										>
+											Agree & Advance
+										</button>
+									)}
+									{mState.role === "guest" && !mState.guestReady && (
+										<button 
+											className="btn btn-success btn-lg"
+											onClick={() => setPlayerReadyToAdvance(true)}
+										>
+											Agree & Advance
+										</button>
+									)}
 									<button 
-										className="btn btn-success btn-lg"
-										onClick={() => setPlayerReadyToAdvance(true)}
+										className="btn btn-secondary btn-lg"
+										onClick={() => setPlayerReadyToAdvance(false)}
 									>
-										Agree & Advance
+										Cancel / Decline
 									</button>
-								)}
-								{mState.role === "guest" && !mState.guestReady && (
-									<button 
-										className="btn btn-success btn-lg"
-										onClick={() => setPlayerReadyToAdvance(true)}
-									>
-										Agree & Advance
-									</button>
-								)}
-								<button 
-									className="btn btn-secondary btn-lg"
-									onClick={() => setPlayerReadyToAdvance(false)}
-								>
-									Cancel / Decline
-								</button>
-							</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
