@@ -121,21 +121,19 @@ export const updateHostLid = (lid: number) => {
 
 // Initiate simulation on Host's local Web Worker
 const executeHostSimulation = async (option: string) => {
-  enqueueWorkerTask(async () => {
-    try {
-      updateState({ statusMessage: `Simulating ${option}...` });
-      // Call the original PlayMenu worker endpoint to simulate
-      await promiseWorker.postMessage(["playMenu", option, undefined]);
-      
-      // Broadcast complete to everyone and reset ready states
-      updateState({ hostReady: false, guestReady: false, advanceOption: null, statusMessage: "Simulation complete." });
-      socket?.emit("simulation-complete");
-    } catch (err) {
-      console.error("Simulation failed:", err);
-      updateState({ hostReady: false, guestReady: false, advanceOption: null, statusMessage: "Simulation failed!" });
-      socket?.emit("simulation-complete");
-    }
-  });
+  try {
+    updateState({ statusMessage: `Simulating ${option}...` });
+    // Call the original PlayMenu worker endpoint to simulate
+    await promiseWorker.postMessage(["playMenu", option, undefined]);
+    
+    // Broadcast complete to everyone and reset ready states
+    updateState({ hostReady: false, guestReady: false, advanceOption: null, statusMessage: "Simulation complete." });
+    socket?.emit("simulation-complete");
+  } catch (err) {
+    console.error("Simulation failed:", err);
+    updateState({ hostReady: false, guestReady: false, advanceOption: null, statusMessage: "Simulation failed!" });
+    socket?.emit("simulation-complete");
+  }
 };
 
 // Trigger simulation ready or cancel coordination
