@@ -464,7 +464,12 @@ const Trade = (props: View<"trade">) => {
 							type="button" 
 							className="btn btn-primary btn-sm" 
 							onClick={async () => {
-								await toWorker("main", "createTrade", mState.pendingTrade!);
+								const trade = mState.pendingTrade!;
+								const swappedTrade: TradeTeams = [
+									{ ...trade[1] },
+									{ ...trade[0] }
+								];
+								await toWorker("main", "createTrade", swappedTrade);
 							}}
 						>
 							Review Proposal
