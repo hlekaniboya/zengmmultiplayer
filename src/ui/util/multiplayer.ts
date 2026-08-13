@@ -240,10 +240,16 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
 
   // Handle simulation ready updates
   socket.on("player-ready-to-advance", ({ senderRole, ready, option }) => {
+    const resolvedOption = option || state.advanceOption;
     if (senderRole === "host") {
-      updateState({ hostReady: ready, advanceOption: ready ? option : null });
+      updateState({ hostReady: ready, advanceOption: ready ? resolvedOption : null });
     } else if (senderRole === "guest") {
-      updateState({ guestReady: ready, advanceOption: ready ? option : null });
+      updateState({ guestReady: ready, advanceOption: ready ? resolvedOption : null });
+    }
+
+    // Host checks if both players are now ready, and executes simulation if so
+    if (state.role === "host" && state.hostReady && state.guestReady && resolvedOption) {
+      executeHostSimulation(resolvedOption);
     }
   });
 
