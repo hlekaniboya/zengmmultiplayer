@@ -24,10 +24,11 @@ export const toWorker = <
 ): Promise<ReturnTypeUnconstrained<Func>> => {
 	const state = getMultiplayerState();
 	
-	// Only proxy Guest worker calls to the Host's worker if the Guest is actively on a league page
-	const isInLeaguePage = window.location.pathname.startsWith("/l/");
+	// Proxy Guest worker calls to Host when in multiplayer, EXCEPT on the main leagues list or new league creation pages
+	const isNonLeaguePage = window.location.pathname === "/" || window.location.pathname.startsWith("/new_league");
+	const shouldProxy = state.isMultiplayer && !isNonLeaguePage;
 
-	if (state.isMultiplayer && isInLeaguePage) {
+	if (shouldProxy) {
 		if (type === "playMenu") {
 			// Intercept and route through turn-agreement coordination
 			setPlayerReadyToAdvance(true, name as string);
