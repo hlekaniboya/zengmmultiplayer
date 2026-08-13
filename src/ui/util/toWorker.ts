@@ -1,4 +1,4 @@
-import { promiseWorker } from "./promiseWorker.ts";
+import { promiseWorker, enqueueWorkerTask } from "./promiseWorker.ts";
 import type { WorkerAPICategory } from "../../worker/index.ts";
 import type api from "../../worker/api/index.ts";
 import { getMultiplayerState, toWorkerGuest, setPlayerReadyToAdvance } from "./multiplayer.ts";
@@ -38,5 +38,5 @@ export const toWorker = <
 			return toWorkerGuest([type, name, param]);
 		}
 	}
-	return promiseWorker.postMessage([type, name, param]);
+	return enqueueWorkerTask(() => promiseWorker.postMessage([type, name, param]));
 };

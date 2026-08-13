@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { promiseWorker } from "./promiseWorker.ts";
+import { promiseWorker, enqueueWorkerTask } from "./promiseWorker.ts";
 import api from "../api/index.ts";
 import { router } from "../router/index.ts";
 import type { TradeTeams } from "../../common/types.ts";
@@ -293,41 +293,43 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
     });
 
     // When a guest requests a worker execution
-    socket.on("guest-to-worker", async ({ guestId, callbackId, payload }) => {
-      try {
-        setProcessingGuestTask(true);
-
-        await promiseWorker.postMessage(["main", "updateGameAttributes", { 
-          userTid: state.guestTid 
-        }]);
-
-        const result = await promiseWorker.postMessage(payload);
-
-        setProcessingGuestTask(false);
-
-        await promiseWorker.postMessage(["main", "updateGameAttributes", { 
-          userTid: state.hostTid 
-        }]);
-
-        socket?.emit("host-to-guest-response", {
-          guestId,
-          callbackId,
-          payload: result,
-        });
-      } catch (err: any) {
-        setProcessingGuestTask(false);
+    socket.on("guest-to-worker", ({ guestId, callbackId, payload }) => {
+      enqueueWorkerTask(async () => {
         try {
+          setProcessingGuestTask(true);
+
+          await promiseWorker.postMessage(["main", "updateGameAttributes", { 
+            userTid: state.guestTid 
+          }]);
+
+          const result = await promiseWorker.postMessage(payload);
+
+          setProcessingGuestTask(false);
+
           await promiseWorker.postMessage(["main", "updateGameAttributes", { 
             userTid: state.hostTid 
           }]);
-        } catch (_) {}
 
-        socket?.emit("host-to-guest-response", {
-          guestId,
-          callbackId,
-          error: err?.message || String(err),
-        });
-      }
+          socket?.emit("host-to-guest-response", {
+            guestId,
+            callbackId,
+            payload: result,
+          });
+        } catch (err: any) {
+          setProcessingGuestTask(false);
+          try {
+            await promiseWorker.postMessage(["main", "updateGameAttributes", { 
+              userTid: state.hostTid 
+            }]);
+          } catch (_) {}
+
+          socket?.emit("host-to-guest-response", {
+            guestId,
+            callbackId,
+            error: err?.message || String(err),
+          });
+        }
+      });
     });
 
     socket.on("guest-joined", ({ guestId }) => {

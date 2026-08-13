@@ -16,3 +16,11 @@ promiseWorker.registerError((error) => {
 	console.error("Error from worker:");
 	console.error(error);
 });
+
+let promiseQueue = Promise.resolve<any>(undefined);
+
+export const enqueueWorkerTask = <T>(task: () => Promise<T> | T): Promise<T> => {
+	const nextPromise = promiseQueue.then(task);
+	promiseQueue = nextPromise.catch(() => {}); // Prevent queue from breaking on errors
+	return nextPromise;
+};
