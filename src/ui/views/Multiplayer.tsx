@@ -28,6 +28,7 @@ const Multiplayer = () => {
     guestReady: false,
     advanceOption: null,
     pendingTrade: null,
+    currentWorkerTid: 0,
   });
 
   const [inputRoomId, setInputRoomId] = useState("");

@@ -69,6 +69,7 @@ export const Controller = () => {
 		guestReady: false,
 		advanceOption: null,
 		pendingTrade: null,
+		currentWorkerTid: 0,
 	});
 
 	useEffect(() => {

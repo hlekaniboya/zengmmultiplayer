@@ -67,6 +67,7 @@ const Trade = (props: View<"trade">) => {
 		guestReady: false,
 		advanceOption: null,
 		pendingTrade: null,
+		currentWorkerTid: 0,
 	});
 
 	useEffect(() => {

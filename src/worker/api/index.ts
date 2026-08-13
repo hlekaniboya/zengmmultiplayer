@@ -167,6 +167,7 @@ import { generateFace } from "../util/face.ts";
 import { choice } from "../../common/random.ts";
 import { getNewLeagueLid } from "../util/getNewLeagueLid.ts";
 import { env } from "../util/env.ts";
+import { wrapNewValueIfCurrentlyWrapped } from "../util/g.ts";
 import { recomputeLocalUITeamOvrs } from "../util/recomputeLocalUITeamOvrs.ts";
 import { initUILocalGames } from "../util/initUILocalGames.ts";
 import { ValueChangeCalculator } from "../core/team/ValueChangeCalculator.ts";
@@ -5097,6 +5098,12 @@ const proposeTrade = async (
 	};
 };
 
+const setTeamContext = async (tid: number) => {
+	const wrappedTid = wrapNewValueIfCurrentlyWrapped(g, "userTid", tid);
+	g.setWithoutSavingToDB("userTid", wrappedTid);
+	await initUILocalGames();
+};
+
 const toggleColaOptOut = async () => {
 	const t = await idb.cache.teams.get(g.get("userTid"));
 	if (!t) {
@@ -5373,6 +5380,7 @@ export default {
 		lockSet,
 		ovr,
 		proposeTrade,
+		setTeamContext,
 		ratingsStatsPopoverInfo,
 		reSignAll,
 		realtimeUpdate,

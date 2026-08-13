@@ -1,7 +1,7 @@
 import { promiseWorker, enqueueWorkerTask } from "./promiseWorker.ts";
 import type { WorkerAPICategory } from "../../worker/index.ts";
 import type api from "../../worker/api/index.ts";
-import { getMultiplayerState, toWorkerGuest, setPlayerReadyToAdvance } from "./multiplayer.ts";
+import { getMultiplayerState, toWorkerGuest, setPlayerReadyToAdvance, updateMultiplayerWorkerTid } from "./multiplayer.ts";
 
 type API = typeof api;
 
@@ -39,5 +39,19 @@ export const toWorker = <
 			return toWorkerGuest([type, name, param]);
 		}
 	}
+
+	// For the Host, if we are in multiplayer, ensure the worker team context is hostTid before running the task!
+	if (state.isMultiplayer && state.role === "host") {
+		return enqueueWorkerTask(async () => {
+			const activeState = getMultiplayerState();
+			// If the worker is currently on Guest team context, switch it back to Host team context!
+			if (activeState.currentWorkerTid !== activeState.hostTid) {
+				await promiseWorker.postMessage(["main", "setTeamContext", activeState.hostTid]);
+				updateMultiplayerWorkerTid(activeState.hostTid);
+			}
+			return promiseWorker.postMessage([type, name, param]);
+		});
+	}
+
 	return enqueueWorkerTask(() => promiseWorker.postMessage([type, name, param]));
 };

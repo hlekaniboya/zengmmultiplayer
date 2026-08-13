@@ -19,6 +19,7 @@ export interface MultiplayerState {
   guestReady: boolean;
   advanceOption: string | null;
   pendingTrade: TradeTeams | null;
+  currentWorkerTid: number;
 }
 
 let socket: Socket | null = null;
@@ -34,6 +35,7 @@ let state: MultiplayerState = {
   guestReady: false,
   advanceOption: null,
   pendingTrade: null,
+  currentWorkerTid: 0,
 };
 
 // Listeners for UI state updates
@@ -83,6 +85,10 @@ export const subscribeMultiplayerState = (listener: (state: MultiplayerState) =>
 const updateState = (updates: Partial<MultiplayerState>) => {
   state = { ...state, ...updates };
   stateListeners.forEach((l) => l({ ...state }));
+};
+
+export const updateMultiplayerWorkerTid = (tid: number) => {
+  updateState({ currentWorkerTid: tid });
 };
 
 // Store active pending promises for guests calling toWorker
@@ -298,17 +304,15 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
         try {
           setProcessingGuestTask(true);
 
-          await promiseWorker.postMessage(["main", "updateGameAttributes", { 
-            userTid: state.guestTid 
-          }]);
+          // Lazy Context Switch: only switch if the worker is not already on guestTid
+          if (state.currentWorkerTid !== state.guestTid) {
+            await promiseWorker.postMessage(["main", "setTeamContext", state.guestTid]);
+            updateState({ currentWorkerTid: state.guestTid });
+          }
 
           const result = await promiseWorker.postMessage(payload);
 
           setProcessingGuestTask(false);
-
-          await promiseWorker.postMessage(["main", "updateGameAttributes", { 
-            userTid: state.hostTid 
-          }]);
 
           socket?.emit("host-to-guest-response", {
             guestId,
@@ -317,11 +321,6 @@ export const initMultiplayer = (role: "host" | "guest", roomId: string) => {
           });
         } catch (err: any) {
           setProcessingGuestTask(false);
-          try {
-            await promiseWorker.postMessage(["main", "updateGameAttributes", { 
-              userTid: state.hostTid 
-            }]);
-          } catch (_) {}
 
           socket?.emit("host-to-guest-response", {
             guestId,
