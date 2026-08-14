@@ -34,6 +34,7 @@ export type WorkerAPICategory = keyof typeof api;
 promiseWorker.register(([type, name, param], hostID) => {
 	const conditions = {
 		hostID,
+		isMultiplayer: (param && typeof param === "object" && "isMultiplayer" in param) ? (param as any).isMultiplayer : undefined,
 	};
 
 	// @ts-expect-error

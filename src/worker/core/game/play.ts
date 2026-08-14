@@ -339,7 +339,7 @@ const play = async (
 			await toUI("realtimeUpdate", [updateEvents, url, raw], conditions);
 		} else {
 			url = undefined;
-			await toUI("realtimeUpdate", [updateEvents]);
+			await toUI("realtimeUpdate", [updateEvents], conditions);
 		}
 
 		if (numDays - 1 <= 0 || playoffsOver) {

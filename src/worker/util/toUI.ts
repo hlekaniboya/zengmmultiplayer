@@ -12,6 +12,13 @@ const toUI = <Name extends keyof typeof api>(
 		return Promise.resolve();
 	}
 
+	if (conditions.isMultiplayer && name === "realtimeUpdate") {
+		// Do not await/block on UI rendering during multiplayer simulation to prevent circular deadlocks
+		promiseWorker.postMessage([name, ...args], conditions.hostID);
+		// @ts-expect-error
+		return Promise.resolve();
+	}
+
 	return promiseWorker.postMessage([name, ...args], conditions.hostID);
 };
 

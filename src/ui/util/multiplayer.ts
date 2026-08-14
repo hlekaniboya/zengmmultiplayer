@@ -124,7 +124,7 @@ const executeHostSimulation = async (option: string) => {
   try {
     updateState({ statusMessage: `Simulating ${option}...` });
     // Call the original PlayMenu worker endpoint to simulate
-    await promiseWorker.postMessage(["playMenu", option, undefined]);
+    await promiseWorker.postMessage(["playMenu", option, { isMultiplayer: true }]);
     
     // Broadcast complete to everyone and reset ready states
     updateState({ hostReady: false, guestReady: false, advanceOption: null, statusMessage: "Simulation complete." });

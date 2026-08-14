@@ -174,6 +174,7 @@ export type CompositeWeights<RatingKey = string> = {
 
 export type Conditions = {
 	hostID?: number;
+	isMultiplayer?: boolean;
 };
 
 export type DraftLotteryResultArray<Completed = boolean> = {
